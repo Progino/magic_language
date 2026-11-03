@@ -30,15 +30,30 @@ void interpretLine(const string& line) {
 	else if (command == "conjure") {
 		string varName;
 		string equalSign;
+		string operation;
 		int value;
-		ss >> varName >> equalSign >> value;
+		int secondValue;
+		ss >> varName >> equalSign >> value >> operation >> secondValue;
 
 		if (equalSign == "=") {
-			memory[varName] = value;
-			cout << "Spell cast: " << varName << " is now " << value << endl;
+			if (operation == "+") {
+				memory[varName] = value + secondValue;
+			}
+			else if (operation == "-") {
+				memory[varName] = value - secondValue;
+			}
+			else if (operation == "") {
+				memory[varName] = value;
+			}
+			else {
+				cout << "Spell failed: unknown operation" << endl;
+				return;
+
+			}
 		}
 		else {
 			cout << "Spell failed: missing '=' sign" << endl;
+			return;
 		}
 	}
 
@@ -67,18 +82,34 @@ void interpretLine(const string& line) {
 
 int main() {
 	string line;
-	cout << "type your spells below, type vanish to close the program" << endl;
+	
+	vector <string>  programCode;
+
+	cout << "Write your code below" << endl;
+	cout << "Type 'run' to execute everything,or 'vanish' to quit" << endl;
 
 	while (true) {
-		cout << '>';
+		cout << "["<<programCode.size() +1 << "] ";
 		getline(cin, line);
 
 		if (line == "vanish") {
 			break;
 		}
-		interpretLine(line);
+		if (line == "run") {
+			cout << "\n--- [Executing Spellbook...] ---" << endl;
+
+			for (const string& storedLine : programCode) {
+				interpretLine(storedLine);
+			}
+
+			cout << "--- [Spellbook Execution Complete] ---\n" << endl;
+			programCode.clear();
+		}
+		else {
+			programCode.push_back(line);
+		}
 	}
 
-	cout << "Exiting the program"<<endl;
+	cout << "The portal is closing... Vanished!" <<endl;
 	return 0;
 }
