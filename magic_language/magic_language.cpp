@@ -32,6 +32,17 @@ void interpretLine(const string& line) {
 
 	if (command == "reveal") {
 		string target;
+		getline(ss >> ws, target, '!');
+		if (target.empty()) {
+			cout << endl;
+		}
+		if (memory.find(target) != memory.end()) {
+			cout << memory[target];
+		}
+		else {
+			cout << target;
+		}
+
 
 		while (getline(ss, target, '!')) {
 
@@ -46,6 +57,23 @@ void interpretLine(const string& line) {
 			}
 		}
 		cout << endl;
+	}
+
+	if (command == "invoke") {
+		string target;
+		int value;
+		getline(ss >> ws, target);
+		if (target.empty()) {
+			cout << "Spell failed: no message provided" << endl;
+			return;
+		}
+		if (memory.find(target) != memory.end()) {
+			cin >> value;
+			memory[target] = value;
+		}
+		else {
+			cout << "Spell failed: variable not found" << endl;
+		}
 	}
 
 	else if (command == "summon") {
@@ -112,6 +140,42 @@ void interpretLine(const string& line) {
 			cout << "Spell failed: variable not found" << endl;
 		}
 	}
+
+	else if (command == "prophecy") {
+		string firstVariable;
+		string secondVariable;
+		string operation;
+		bool valid = false;
+		ss >> firstVariable >> operation >> secondVariable;
+		if (operation == "bound") {
+			if (firstVariable == secondVariable) {
+				valid = true;
+			}
+		}
+		else if (operation == "weaker") {
+			if (firstVariable < secondVariable) {
+				valid = true;
+			}
+		}
+		else if (operation == "stronger") {
+			if (firstVariable > secondVariable) {
+				valid = true;
+			}
+		}
+		string fulfill;
+		ss >> fulfill;
+		if (fulfill == "fulfill") {
+			if (valid) {
+				string function;
+				getline(ss >> ws, function);
+				interpretLine(function);
+			}
+		}
+		else {
+			cout << "Spell failed: missing 'fulfill' keyword" << endl;
+		}
+
+	}
 }
 
 int main() {
@@ -120,7 +184,7 @@ int main() {
 	vector <string>  programCode;
 
 	cout << "Write your code below" << endl;
-	cout << "Type 'run' to execute everything,or 'vanish' to quit" << endl;
+	cout << "Type 'run' to execute everything,or 'vanish' to quit" << endl<<endl;
 
 	while (true) {
 		cout << "["<<programCode.size() +1 << "] ";
@@ -144,6 +208,6 @@ int main() {
 		}
 	}
 
-	cout << "The portal is closing... Vanished!"<<endl;
+	cout << endl<<"The portal is closing... Vanished!"<<endl;
 	return 0;
 }
