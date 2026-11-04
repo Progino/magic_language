@@ -148,17 +148,32 @@ void interpretLine(const string& line) {
 		bool valid = false;
 		ss >> firstVariable >> operation >> secondVariable;
 		if (operation == "bound") {
-			if (firstVariable == secondVariable) {
+			if (getValue(firstVariable) == getValue(secondVariable)) {
 				valid = true;
 			}
 		}
+		else if (operation == "unbound") {
+			if (getValue(firstVariable) != getValue(secondVariable)) {
+				valid =  true;
+			}
+		}
 		else if (operation == "weaker") {
-			if (firstVariable < secondVariable) {
+			if (getValue(firstVariable) < getValue(secondVariable)) {
+				valid = true;
+			}
+		}
+		else if (operation == "weakerAs") {
+			if (getValue(firstVariable) <= getValue(secondVariable)) {
 				valid = true;
 			}
 		}
 		else if (operation == "stronger") {
-			if (firstVariable > secondVariable) {
+			if (getValue(firstVariable) > getValue(secondVariable)) {
+				valid = true;
+			}
+		}
+		else if (operation == "strongerAs") {
+			if (getValue(firstVariable) >= getValue(secondVariable)) {
 				valid = true;
 			}
 		}
@@ -174,7 +189,26 @@ void interpretLine(const string& line) {
 		else {
 			cout << "Spell failed: missing 'fulfill' keyword" << endl;
 		}
+	}
 
+	else if (command == "echo") {
+		string function;
+		string cycles;
+		string sign;
+		ss >> cycles >> sign;;
+		if (sign == ":") {
+			getline(ss >> ws, function);
+			for (int i = 0;i < getValue(cycles); i++) {
+				interpretLine(function);
+			}
+		}
+		else {
+			cout << "Spell failed: missing ':' sign" << endl;
+			return;
+		}
+	}
+
+	else if (command == "^"){
 	}
 }
 
