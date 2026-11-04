@@ -2,11 +2,24 @@
 #include <string>
 #include <unordered_map>
 #include <sstream>
+#include <fstream>
 using namespace std;
 
 
 
 unordered_map<string, int> memory;
+
+int getValue(const string& token) {
+	if (isdigit(token[0]) || (token.size() > 1 && token[0] == '-')) {
+		return stoi(token);
+	}
+	if (memory.find(token) != memory.end()) {
+		return memory[token];
+	}
+
+	cout << "Warning: " << token << " is undefined. Defaulting to 0." << endl;
+	return 0;
+}
 
 void interpretLine(const string& line) {
 	stringstream ss(line);
@@ -19,126 +32,60 @@ void interpretLine(const string& line) {
 
 	if (command == "reveal") {
 		string target;
-		getline(ss >> ws, target);
 
-		if (memory.find(target) != memory.end()) {
-			cout << memory[target] << endl;
+		while (getline(ss, target, '!')) {
+
+			if (target.empty()) {
+				cout << endl;
+			}
+			if (memory.find(target) != memory.end()) {
+				cout << memory[target];
+			}
+			else {
+				cout << target;
+			}
 		}
-		else {
-			cout << target << endl;
-		}
+		cout << endl;
 	}
 
-	else if (command == "conjure") {
+	else if (command == "summon") {
 		string varName;
 		string equalSign;
 		string operation;
-		string stringValue;
-		string secondStringValue;
-		int value;
-		int secondValue;
-		ss >> varName >> equalSign;
+		string firstToken;
+		string secondToken;
+		ss >> varName >> equalSign >> firstToken;
 
 		if (equalSign == "=") {
-			if (ss >> value) {
-				if (ss >> operation) {
-					if (ss >> secondValue) {
-						if (operation == "+") {
-							memory[varName] = value + secondValue;
-						}
-						else if (operation == "-") {
-							memory[varName] = value - secondValue;
-						}
-						else if (operation == "*") {
-							memory[varName] = value * secondValue;
-						}
-						else {
-							cout << "Spell failed: unknown operation" << endl;
-							return;
+			int firstValue = getValue(firstToken);
 
-						}
+				if (ss >> operation >> secondToken){
+
+					int secondValue = getValue(secondToken);
+
+					if (operation == "+") {
+						memory[varName] = firstValue + secondValue;
 					}
-					else if (ss >> secondStringValue) {
-						if (memory.find(secondStringValue) != memory.end()) {
-							if (operation == "+") {
-								memory[varName] = value + memory[secondStringValue];
-							}
-							else if (operation == "-") {
-								memory[varName] = value - memory[secondStringValue];
-							}
-							else if (operation == "*") {
-								memory[varName] = value * memory[secondStringValue];
-							}
-							else {
-								cout << "Spell failed: unknown operation" << endl;
-								return;
-							}
-						}
-						else {
-							cout << "Spell failed: variable not found" << endl;
-							return;
-						}
+					else if (operation == "-") {
+						memory[varName] = firstValue - secondValue;
 					}
-				}
-				else {
-					memory[varName] = value;
-				}
-			}
-			else if (ss >> stringValue) {
-				if (memory.find(stringValue) != memory.end()) {
-
-					if (ss >> operation) {
-						if (ss >> secondValue) {
-
-							if (operation == "+") {
-								memory[varName] = memory[stringValue] + secondValue;
-							}
-							else if (operation == "-") {
-								memory[varName] = memory[stringValue] - secondValue;
-							}
-							else if (operation == "*") {
-								memory[varName] = memory[stringValue] * secondValue;
-							}
-							else {
-								cout << "Spell failed: unknown operation" << endl;
-								return;
-
-							}
-						}
-						else if (ss >> secondStringValue) {
-							if (memory.find(secondStringValue) != memory.end()) {
-								if (operation == "+") {
-									memory[varName] = memory[stringValue] + memory[secondStringValue];
-								}
-								else if (operation == "-") {
-									memory[varName] = memory[stringValue] - memory[secondStringValue];
-								}
-								else if (operation == "*") {
-									memory[varName] = memory[stringValue] * memory[secondStringValue];
-								}
-								else {
-									cout << "Spell failed: unknown operation" << endl;
-									return;
-
-								}
-							}
-							else {
-								cout << "Spell failed: variable not found" << endl;
-								return;
-							}
-						}
+					else if (operation == "*") {
+						memory[varName] = firstValue * secondValue;
+					}
+					else if (operation == "/") {
+						memory[varName] = firstValue / secondValue;
 					}
 					else {
-						memory[varName] = memory[stringValue];
+						cout << "Spell failed: unknown operation" << endl;
+						return;
+
 					}
 				}
 				else {
-					cout << "Spell failed: variable not found" << endl;
-					return;
+					memory[varName] = firstValue;
 				}
-			}
 		}
-		else {
+		else{
 			cout << "Spell failed: missing '=' sign" << endl;
 			return;
 		}

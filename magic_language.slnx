@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="magic_language/magic_language.vcxproj" />
+  <Project Path="magic_language/magic_language.vcxproj" Id="0a8c470c-6437-4e7e-9b44-59995ae62d97" />
 </Solution>
