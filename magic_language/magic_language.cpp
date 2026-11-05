@@ -21,9 +21,23 @@ int getValue(const string& token) {
 	return 0;
 }
 
-void interpretLine(const string& line) {
+string comment(string line) {
 	stringstream ss(line);
 	string command;
+	getline(ss >> ws, command, '^');
+
+	while (!command.empty() && isspace(command.back())) {
+		command.pop_back();
+	}
+	return command;
+}
+
+void interpretLine(const string& line) {
+	string code;
+	code = comment(line);
+	stringstream ss(code);
+	string command;
+	string comment;
 	ss >> command;
 
 	if (command.empty()) {
@@ -33,6 +47,22 @@ void interpretLine(const string& line) {
 	if (command == "reveal") {
 		string target;
 		getline(ss >> ws, target, '!');
+
+		while (!target.empty() && (isspace(target.front()) || target.front() == '"')) {
+			if (target.front() == '"') {
+				target.erase(target.begin());
+				break;
+			}
+			target.erase(target.begin());
+		}
+
+		while (!target.empty() && (isspace(target.back()) || target.back() == '"')) {
+			if (target.back() == '"') {
+				target.pop_back();
+				break;
+			}
+			target.pop_back();
+		}
 		if (target.empty()) {
 			cout << endl;
 		}
@@ -44,8 +74,23 @@ void interpretLine(const string& line) {
 		}
 
 
-		while (getline(ss, target, '!')) {
+		while (getline(ss >> ws, target, '!')) {
 
+			while (!target.empty() && (isspace(target.front()) || target.front() == '"')) {
+				if (target.front() == '"') {
+					target.erase(target.begin());
+					break;
+				}
+				target.erase(target.begin());
+			}
+
+			while (!target.empty() && (isspace(target.back()) || target.back() == '"')) {
+				if (target.back() == '"') {
+					target.pop_back();
+					break;
+				}
+				target.pop_back();
+			}
 			if (target.empty()) {
 				cout << endl;
 			}
@@ -59,7 +104,7 @@ void interpretLine(const string& line) {
 		cout << endl;
 	}
 
-	if (command == "invoke") {
+	else if (command == "invoke") {
 		string target;
 		int value;
 		getline(ss >> ws, target);
@@ -206,9 +251,6 @@ void interpretLine(const string& line) {
 			cout << "Spell failed: missing ':' sign" << endl;
 			return;
 		}
-	}
-
-	else if (command == "^"){
 	}
 }
 
