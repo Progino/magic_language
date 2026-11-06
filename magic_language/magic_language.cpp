@@ -187,45 +187,59 @@ void interpretLine(const string& line) {
 	}
 
 	else if (command == "prophecy") {
+		//prophecy x > y fulfill drain x
 		string firstVariable;
 		string secondVariable;
 		string operation;
 		bool valid = false;
+		bool correct = false;
 		ss >> firstVariable >> operation >> secondVariable;
 		if (operation == "bound") {
+			valid = true;
 			if (getValue(firstVariable) == getValue(secondVariable)) {
-				valid = true;
+				correct = true;
 			}
 		}
 		else if (operation == "unbound") {
+			valid = true;
 			if (getValue(firstVariable) != getValue(secondVariable)) {
-				valid =  true;
+				correct =  true;
 			}
 		}
 		else if (operation == "weaker") {
+			valid = true;
 			if (getValue(firstVariable) < getValue(secondVariable)) {
-				valid = true;
+				correct = true;
 			}
 		}
 		else if (operation == "weakerAs") {
+			valid = true;
 			if (getValue(firstVariable) <= getValue(secondVariable)) {
-				valid = true;
+				correct = true;
 			}
 		}
 		else if (operation == "stronger") {
+			valid = true;
 			if (getValue(firstVariable) > getValue(secondVariable)) {
-				valid = true;
+				correct = true;
 			}
 		}
 		else if (operation == "strongerAs") {
+			valid = true;
 			if (getValue(firstVariable) >= getValue(secondVariable)) {
-				valid = true;
+				correct = true;
 			}
 		}
+
+		if (!valid) {
+			cout << "Spell failed: invalid operator" << endl;
+			return;
+		}
+
 		string fulfill;
 		ss >> fulfill;
 		if (fulfill == "fulfill") {
-			if (valid) {
+			if (correct) {
 				string function;
 				getline(ss >> ws, function);
 				interpretLine(function);
@@ -237,19 +251,106 @@ void interpretLine(const string& line) {
 	}
 
 	else if (command == "echo") {
+		//echo 5 fulfill drain x
 		string function;
 		string cycles;
-		string sign;
-		ss >> cycles >> sign;;
-		if (sign == ":") {
+		string fulfill;
+		ss >> cycles >> fulfill;
+		if (fulfill == "fulfill") {
 			getline(ss >> ws, function);
 			for (int i = 0;i < getValue(cycles); i++) {
 				interpretLine(function);
 			}
 		}
 		else {
-			cout << "Spell failed: missing ':' sign" << endl;
+			cout << "Spell failed: missing 'fulfill' keyword" << endl;
 			return;
+		}
+	}
+
+	else if (command == "ritual") {
+		//ritual x > y fulfill drain x
+		string firstValue;
+		string secondValue;
+		string operation;
+		string fulfill;
+		ss >> firstValue >> operation >> secondValue >> fulfill;
+
+		if (fulfill != "fulfill") {
+			cout << "Spell failed: missing 'fulfill' keyword";
+			return;
+		}
+		string function;
+		getline(ss >> ws, function);
+
+		while (true) {
+			bool valid = false;
+			int valueOne = getValue(firstValue);
+			int valueTwo = getValue(secondValue);
+			if (operation == "bound") {
+				valid = true;
+				if (valueOne == valueTwo) {
+					interpretLine(function);
+					continue;
+				}
+				else {
+					return;
+				}
+			}
+			else if (operation == "unbound") {
+				valid = true;
+				if (valueOne != valueTwo) {
+					interpretLine(function);
+					continue;
+				}
+				else {
+					return;
+				}
+			}
+			else if (operation == "weaker") {
+				valid = true;
+				if (valueOne < valueTwo) {
+					interpretLine(function);
+					continue;
+				}
+				else {
+					return;
+				}
+			}
+			else if (operation == "weakerAs") {
+				valid = true;
+				if (valueOne <= valueTwo){
+					interpretLine(function);
+					continue;
+				}
+				else {
+					return;
+				}
+			}
+			else if (operation == "stronger") {
+				valid = true;
+				if (valueOne > valueTwo) {
+					interpretLine(function);
+					continue;
+				}
+				else {
+					return;
+				}
+			}
+			else if (operation == "strongerAs") {
+				valid = true;
+				if (valueOne >= valueTwo) {
+					interpretLine(function);
+					continue;
+				}
+				else {
+					return;
+				}
+			}
+			if (!valid) {
+				cout << "Spell failed: invalid operator" << endl;
+				return;
+			}
 		}
 	}
 }
