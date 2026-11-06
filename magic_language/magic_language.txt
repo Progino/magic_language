@@ -1,0 +1,3 @@
+summon mario = 10
+reveal mario!
+

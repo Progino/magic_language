@@ -3,11 +3,29 @@
 #include <unordered_map>
 #include <sstream>
 #include <fstream>
+#include <vector>
 using namespace std;
 
-
+const string FILENAME = "magic_language.txt";
 
 unordered_map<string, int> memory;
+
+void loadProgram(vector <string> &program) {
+	ifstream file(FILENAME);
+
+	if (!file.is_open()) {
+		cout << "failed to open the file" << endl;
+		return;
+	}
+
+	string line;
+	while (getline(file, line)) {
+		program.push_back(line);
+	}
+
+	file.close();
+	return;
+}
 
 int getValue(const string& token) {
 	if (isdigit(token[0]) || (token.size() > 1 && token[0] == '-')) {
@@ -26,7 +44,7 @@ string comment(string line) {
 	string command;
 	getline(ss >> ws, command, '^');
 
-	while (!command.empty() && isspace(command.back())) {
+	while (!command.empty() && (isspace((unsigned char)command.back()) || command.back() == '\r' || command.back() == '\n')) {
 		command.pop_back();
 	}
 	return command;
@@ -46,59 +64,33 @@ void interpretLine(const string& line) {
 
 	if (command == "reveal") {
 		string target;
-		getline(ss >> ws, target, '!');
-
-		while (!target.empty() && (isspace(target.front()) || target.front() == '"')) {
-			if (target.front() == '"') {
-				target.erase(target.begin());
-				break;
-			}
-			target.erase(target.begin());
-		}
-
-		while (!target.empty() && (isspace(target.back()) || target.back() == '"')) {
-			if (target.back() == '"') {
-				target.pop_back();
-				break;
-			}
-			target.pop_back();
-		}
-		if (target.empty()) {
-			cout << endl;
-		}
-		if (memory.find(target) != memory.end()) {
-			cout << memory[target];
-		}
-		else {
-			cout << target;
-		}
-
-
+		bool first = true;
 		while (getline(ss >> ws, target, '!')) {
 
-			while (!target.empty() && (isspace(target.front()) || target.front() == '"')) {
-				if (target.front() == '"') {
-					target.erase(target.begin());
-					break;
-				}
+			while (!target.empty() && isspace((unsigned char)target.front())) {
 				target.erase(target.begin());
 			}
-
-			while (!target.empty() && (isspace(target.back()) || target.back() == '"')) {
-				if (target.back() == '"') {
-					target.pop_back();
-					break;
-				}
+			while (!target.empty() && isspace((unsigned char)target.back())) {
 				target.pop_back();
 			}
-			if (target.empty()) {
-				cout << endl;
+			if (target.size() >= 2 && target.front() == '"' && target.back() == '"') {
+				target.erase(target.begin());
+				target.pop_back();
 			}
-			if (memory.find(target) != memory.end()) {
-				cout << memory[target];
-			}
-			else {
-				cout << target;
+
+			if (!target.empty()) {
+
+				if (!first) {
+					cout << " ";
+				}
+				first = false;
+
+				if (memory.find(target) != memory.end()) {
+					cout << memory[target];
+				}
+				else {
+					cout << target;
+				}
 			}
 		}
 		cout << endl;
@@ -357,34 +349,15 @@ void interpretLine(const string& line) {
 
 int main() {
 	string line;
-	
 	vector <string>  programCode;
+	loadProgram(programCode);
 
-	cout << "Write your code below" << endl;
-	cout << "Type 'run' to execute everything,or 'vanish' to quit" << endl<<endl;
+	cout << "summoning the code" << endl<<endl;
 
-	while (true) {
-		cout << "["<<programCode.size() +1 << "] ";
-		getline(cin, line);
-
-		if (line == "vanish") {
-			break;
-		}
-		if (line == "run") {
-			cout << "\n--- [Executing Spellbook...] ---" << endl;
-
-			for (const string& storedLine : programCode) {
-				interpretLine(storedLine);
-			}
-
-			cout << "--- [Spellbook Execution Complete] ---\n" << endl;
-			programCode.clear();
-		}
-		else {
-			programCode.push_back(line);
-		}
+	for (const string& storedLine : programCode) {
+		interpretLine(storedLine);
 	}
-
+	
 	cout << endl<<"The portal is closing... Vanished!"<<endl;
 	return 0;
 }
