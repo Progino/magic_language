@@ -9,6 +9,7 @@ using namespace std;
 const string FILENAME = "magic_language.txt";
 
 unordered_map<string, int> memory;
+unordered_map<string, vector<int>> grimmoires;
 
 void loadProgram(vector <string> &program) {
 	ifstream file(FILENAME);
@@ -181,6 +182,65 @@ void interpretLine(vector <string> program, int &lineNumber) {
 		else{
 			cout << "Spell failed: missing '=' sign" << endl;
 			return;
+		}
+	}
+
+	else if (command == "grimmoire") {
+		string vectorName;
+		string sizeS;
+		int size;
+		ss >> vectorName >> sizeS;
+		size = getValue(sizeS);
+		if (size <= 0) {
+			cout << "Spell failed: invalid size" << endl;
+			return;
+		}
+		grimmoires[vectorName] = vector<int>(size,0);
+
+	}
+
+	else if (command == "scribe") {
+		string vectorName;
+		string positionS;
+		string varString;
+		ss >> vectorName >> positionS >> varString;
+		int position = getValue(positionS);
+		int var = getValue(varString);
+
+		if (grimmoires.find(vectorName) != grimmoires.end()) {
+			if (grimmoires[vectorName].size() > position && position >= 0) {
+				grimmoires[vectorName][position] = var;
+			}
+			else {
+				cout << "Spell failed: invalidpoiìsition" << endl;
+			}
+		}
+		else {
+			cout << "Spell failed: vector not found" << endl;
+		}
+	}
+
+	else if (command == "extract") {
+		string vectorName;
+		string positionS;
+		string varString;
+		ss >> vectorName >> positionS >> varString;
+		int position = getValue(positionS);
+		if (grimmoires.find(vectorName) != grimmoires.end()) {
+			if (grimmoires[vectorName].size() > position && position >= 0) {
+				if (memory.find(varString) != memory.end()) {
+					memory[varString] = grimmoires[vectorName][position];
+				}
+				else {
+					cout << "Spell failde: variable not found" << endl;
+				}
+			}
+			else {
+				cout << "Spell failed: invalid position" << endl;
+			}
+		}
+		else {
+			cout << "Spell failed: vector not found" << endl;
 		}
 	}
 

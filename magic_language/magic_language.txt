@@ -1,15 +1,14 @@
-summon merlin = 15
-summon gandalf = 12
+summon slot = 0
+summon current_item = 0
 
-reveal "Merlin power:" ! merlin
-reveal "Gandalf power:" ! gandalf
-reveal "The draining ritual begins..."
+grimmoire bag 3
 
-ritual merlin stronger gandalf
-    reveal "Draining 1 power from Merlin..."
-    drain merlin
+scribe bag 0 99
+scribe bag 1 45
+scribe bag 2 7
+
+ritual slot weaker 3
+    extract bag slot current_item
+    reveal "Item at slot" ! slot ! "is: " ! current_item
+    infuse slot
 end
-
-reveal "Ritual complete! Balanced powers:"
-reveal "Merlin final power:" ! merlin
-reveal "Gandalf final power:" ! gandalf
