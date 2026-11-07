@@ -50,7 +50,35 @@ string comment(string line) {
 	return command;
 }
 
-void interpretLine(const string& line) {
+int findEnd(vector <string> program, int &startLine) {
+	int lineCheck = 1;
+	string command;
+	string line;
+	string code;
+
+	while (startLine < program.size()) {
+		line = program[startLine];
+		code = comment(line);
+		stringstream ss(code);
+		ss >> command;
+		if (command == "prophecy" || command == "echo" || command == "ritual") {
+			lineCheck++;
+		}
+		else if(command == "end"){
+			lineCheck--;
+			if (lineCheck == 0) {
+				return startLine;
+			}
+		}
+		startLine++;
+	}
+	cout << "Spell failed: missing 'end' keyword" << endl;
+	return lineCheck;
+}
+
+void interpretLine(vector <string> program, int &lineNumber) {
+	string line;
+	line = program[lineNumber];
 	string code;
 	code = comment(line);
 	stringstream ss(code);
@@ -179,7 +207,7 @@ void interpretLine(const string& line) {
 	}
 
 	else if (command == "prophecy") {
-		//prophecy x > y fulfill drain x
+		//prophecy x > y (if)
 		string firstVariable;
 		string secondVariable;
 		string operation;
@@ -228,136 +256,131 @@ void interpretLine(const string& line) {
 			return;
 		}
 
-		string fulfill;
-		ss >> fulfill;
-		if (fulfill == "fulfill") {
-			if (correct) {
-				string function;
-				getline(ss >> ws, function);
-				interpretLine(function);
+		int finalLine;
+		int searchLine = lineNumber + 1;
+		finalLine = findEnd(program,searchLine);
+		if(finalLine == -1) return;
+
+		if (correct) {
+			int innerLine = lineNumber + 1;
+			while (innerLine < finalLine) {
+				interpretLine(program, innerLine);
+				innerLine++;
 			}
 		}
-		else {
-			cout << "Spell failed: missing 'fulfill' keyword" << endl;
-		}
+		lineNumber = finalLine;
 	}
 
 	else if (command == "echo") {
-		//echo 5 fulfill drain x
-		string function;
+		//echo 5 (for)
 		string cycles;
-		string fulfill;
-		ss >> cycles >> fulfill;
-		if (fulfill == "fulfill") {
-			getline(ss >> ws, function);
-			for (int i = 0;i < getValue(cycles); i++) {
-				interpretLine(function);
+		ss >> cycles;
+
+		int finalLine;
+		int searchLine = lineNumber + 1;
+		finalLine = findEnd(program, searchLine);
+		if (finalLine == -1) return;
+		int startLine = lineNumber + 1;
+
+		for (int i = 0;i < getValue(cycles); i++) {
+			int innerLine = startLine;
+			while (innerLine < finalLine) {
+				interpretLine(program, innerLine);
+				innerLine++;
 			}
+
 		}
-		else {
-			cout << "Spell failed: missing 'fulfill' keyword" << endl;
-			return;
-		}
+		lineNumber = finalLine;
 	}
 
 	else if (command == "ritual") {
-		//ritual x > y fulfill drain x
+		//ritual x > y (while)
 		string firstValue;
 		string secondValue;
 		string operation;
-		string fulfill;
-		ss >> firstValue >> operation >> secondValue >> fulfill;
+		ss >> firstValue >> operation >> secondValue;
 
-		if (fulfill != "fulfill") {
-			cout << "Spell failed: missing 'fulfill' keyword";
-			return;
-		}
-		string function;
-		getline(ss >> ws, function);
+		int finalLine;
+		int searchLine = lineNumber + 1;
+		finalLine = findEnd(program, searchLine);
+		if (finalLine == -1) return;
+		int startLine = lineNumber + 1;
 
 		while (true) {
 			bool valid = false;
+			bool correct = false;
 			int valueOne = getValue(firstValue);
 			int valueTwo = getValue(secondValue);
+
 			if (operation == "bound") {
 				valid = true;
 				if (valueOne == valueTwo) {
-					interpretLine(function);
-					continue;
-				}
-				else {
-					return;
+					correct = true;
 				}
 			}
 			else if (operation == "unbound") {
 				valid = true;
 				if (valueOne != valueTwo) {
-					interpretLine(function);
-					continue;
-				}
-				else {
-					return;
+					correct = true;
 				}
 			}
 			else if (operation == "weaker") {
 				valid = true;
 				if (valueOne < valueTwo) {
-					interpretLine(function);
-					continue;
-				}
-				else {
-					return;
+					correct = true;
 				}
 			}
 			else if (operation == "weakerAs") {
 				valid = true;
 				if (valueOne <= valueTwo){
-					interpretLine(function);
-					continue;
-				}
-				else {
-					return;
+					correct = true;
 				}
 			}
 			else if (operation == "stronger") {
 				valid = true;
 				if (valueOne > valueTwo) {
-					interpretLine(function);
-					continue;
-				}
-				else {
-					return;
+					correct = true;
 				}
 			}
 			else if (operation == "strongerAs") {
 				valid = true;
 				if (valueOne >= valueTwo) {
-					interpretLine(function);
-					continue;
-				}
-				else {
-					return;
+					correct = true;
 				}
 			}
 			if (!valid) {
 				cout << "Spell failed: invalid operator" << endl;
 				return;
 			}
+
+			if (!correct) {
+				break;
+			}
+
+			int innerLine = startLine;
+			while (innerLine < finalLine) {
+				interpretLine(program, innerLine);
+				innerLine++;
+			}
 		}
+		lineNumber = finalLine;
 	}
 }
 
 int main() {
 	string line;
 	vector <string>  programCode;
+	int lineNumber = 0;
 	loadProgram(programCode);
+
 
 	cout << "summoning the code" << endl<<endl;
 
-	for (const string& storedLine : programCode) {
-		interpretLine(storedLine);
+	while (lineNumber < programCode.size()){
+		interpretLine(programCode, lineNumber);
+		lineNumber++;
 	}
-	
+
 	cout << endl<<"The portal is closing... Vanished!"<<endl;
 	return 0;
 }

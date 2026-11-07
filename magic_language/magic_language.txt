@@ -1,3 +1,15 @@
-summon mario = 10
-reveal mario!
+summon merlin = 15
+summon gandalf = 12
 
+reveal "Merlin power:" ! merlin
+reveal "Gandalf power:" ! gandalf
+reveal "The draining ritual begins..."
+
+ritual merlin stronger gandalf
+    reveal "Draining 1 power from Merlin..."
+    drain merlin
+end
+
+reveal "Ritual complete! Balanced powers:"
+reveal "Merlin final power:" ! merlin
+reveal "Gandalf final power:" ! gandalf
