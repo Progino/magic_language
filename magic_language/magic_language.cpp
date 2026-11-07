@@ -4,6 +4,7 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
+#include <random>
 using namespace std;
 
 const string FILENAME = "magic_language.txt";
@@ -151,38 +152,88 @@ void interpretLine(vector <string> program, int &lineNumber) {
 		ss >> varName >> equalSign >> firstToken;
 
 		if (equalSign == "=") {
+			if (firstToken == "") {
+				cout << "Spell failed: incomplete command" << endl;
+				return;
+			}
+
+			if (firstToken == "chaos") {
+				string minimumS;
+				string maximumS;
+				ss >> minimumS >> maximumS;
+
+				if (minimumS == "" || maximumS == "") {
+					cout << "Spell failed: chaos requires two limits" << endl;
+					return;
+				}
+
+				int minimum = getValue(minimumS);
+				int maximum = getValue(maximumS);
+
+				if (maximum < minimum) {
+					cout << "Spell failed: chaos limits are inverted" << endl;
+					return;
+				}
+
+				memory[varName] = rand() % (maximum - minimum + 1) + minimum;
+				return;
+			}
+
 			int firstValue = getValue(firstToken);
 
-				if (ss >> operation >> secondToken){
+			if (ss >> operation >> secondToken){
 
-					int secondValue = getValue(secondToken);
+				int secondValue = getValue(secondToken);
 
-					if (operation == "+") {
-						memory[varName] = firstValue + secondValue;
-					}
-					else if (operation == "-") {
-						memory[varName] = firstValue - secondValue;
-					}
-					else if (operation == "*") {
-						memory[varName] = firstValue * secondValue;
-					}
-					else if (operation == "/") {
-						memory[varName] = firstValue / secondValue;
-					}
-					else {
-						cout << "Spell failed: unknown operation" << endl;
+				if (operation == "+") {
+					memory[varName] = firstValue + secondValue;
+				}
+				else if (operation == "-") {
+					memory[varName] = firstValue - secondValue;
+				}
+				else if (operation == "*") {
+					memory[varName] = firstValue * secondValue;
+				}
+				else if (operation == "/") {
+					if (secondValue == 0) {
+						cout << "Spell failed: division by zero" << endl;
 						return;
-
 					}
+					memory[varName] = firstValue / secondValue;
 				}
 				else {
-					memory[varName] = firstValue;
+					cout << "Spell failed: unknown operation" << endl;
+					return;
+
 				}
+			}
+			else {
+				memory[varName] = firstValue;
+			}
 		}
 		else{
 			cout << "Spell failed: missing '=' sign" << endl;
 			return;
 		}
+	}
+
+	else if (command == "banish") {
+		string var;
+		bool banished = false;
+		ss >> var;
+
+		if (memory.find(var) != memory.end()) {
+			memory.erase(var);
+			banished = true;
+		}
+		if (grimmoires.find(var) != grimmoires.end()) {
+			grimmoires.erase(var);
+			banished = true;
+		}
+		if(!banished) {
+			cout << "Spell failed: cannot banish the nonexistent" << endl;
+			return;
+		}	
 	}
 
 	else if (command == "grimmoire") {
