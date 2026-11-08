@@ -1,21 +1,8 @@
 summon health = 100
-summon mana = 50
+summon zero = 0
 
-ward
-    summon mana = mana - 10
-    reveal "Remaining mana after spell:" ! mana
-curse
-    reveal "ERROR: This curse message should NOT appear!"
-end
+alchemy health 100
 
-summon void = 0
+reveal health
+reveal zero
 
-ward
-    reveal "Attempting to channel unstable chaotic energy..."
-    summon health = health / void
-    reveal "This text will be skipped because the spell breaks above."
-curse
-    reveal "CRITICAL: Spell failed! Emergency ward activated!"
-    summon health = 50
-    reveal "Health restored to safety level:" ! health
-end

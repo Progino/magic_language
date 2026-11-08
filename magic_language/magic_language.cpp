@@ -17,7 +17,7 @@ void loadProgram(vector <string> &program) {
 	ifstream file(FILENAME);
 
 	if (!file.is_open()) {
-		cout << "failed to open the file" << endl;
+		cout << "Spell failed: failed to open the file" << endl;
 		return;
 	}
 
@@ -30,7 +30,7 @@ void loadProgram(vector <string> &program) {
 	return;
 }
 
-int getValue(const string& token) {
+int getValue(const string& token, int lineNumber) {
 	if (token.empty()) {
 		return 0;
 	}
@@ -41,7 +41,7 @@ int getValue(const string& token) {
 		return memory[token];
 	}
 
-	cout << "Warning: " << token << " is undefined. Defaulting to 0." << endl;
+	cout << "Warning (Line " << (lineNumber + 1) << "): "<< token << " is undefined. Defaulting to 0." << endl;
 	return 0;
 }
 
@@ -56,7 +56,7 @@ string comment(string line) {
 	return command;
 }
 
-int findEnd(vector <string> program, int &startLine) {
+int findEnd(vector <string> &program, int &startLine) {
 	int lineCheck = 1;
 	string command;
 	string line;
@@ -82,7 +82,7 @@ int findEnd(vector <string> program, int &startLine) {
 	return lineCheck;
 }
 
-void findCurse(vector <string> program, int startLine, int& curseLine, int& endLine) {
+void findCurse(vector <string> &program, int startLine, int& curseLine, int& endLine) {
 	curseLine = -1;
 	endLine = -1;
 
@@ -110,7 +110,7 @@ void findCurse(vector <string> program, int startLine, int& curseLine, int& endL
 	cout << "Spell failed: missing 'end' keyword" << endl;
 }
 
-void interpretLine(vector <string> program, int &lineNumber) {
+void interpretLine(vector <string> &program, int &lineNumber) {
 	string line;
 	line = program[lineNumber];
 	string code;
@@ -159,11 +159,13 @@ void interpretLine(vector <string> program, int &lineNumber) {
 	}
 
 	else if (command == "invoke") {
+		//invoke x(cin)
 		string target;
 		int value;
 		getline(ss >> ws, target);
 		if (target.empty()) {
-			cout << "Spell failed: no message provided" << endl;
+			cout << "Spell failed (Line "<<(lineNumber + 1)<< "): no message provided" << endl;
+			spellFailed = true;
 			return;
 		}
 		if (memory.find(target) != memory.end()) {
@@ -171,11 +173,14 @@ void interpretLine(vector <string> program, int &lineNumber) {
 			memory[target] = value;
 		}
 		else {
-			cout << "Spell failed: variable not found" << endl;
+			cout << "Spell failed (Line " << (lineNumber + 1) << "): variable not found" << endl;
+			spellFailed = true;
+			return;
 		}
 	}
 
 	else if (command == "summon") {
+		//summon x = 10
 		string varName;
 		string equalSign;
 		string operation;
@@ -185,7 +190,8 @@ void interpretLine(vector <string> program, int &lineNumber) {
 
 		if (equalSign == "=") {
 			if (firstToken == "") {
-				cout << "Spell failed: incomplete command" << endl;
+				cout << "Spell failed (Line " << (lineNumber + 1) << "): incomplete command" << endl;
+				spellFailed = true;
 				return;
 			}
 
@@ -195,15 +201,17 @@ void interpretLine(vector <string> program, int &lineNumber) {
 				ss >> minimumS >> maximumS;
 
 				if (minimumS == "" || maximumS == "") {
-					cout << "Spell failed: chaos requires two limits" << endl;
+					cout << "Spell failed (Line " << (lineNumber + 1) << "): chaos requires two limits" << endl;
+					spellFailed = true;
 					return;
 				}
 
-				int minimum = getValue(minimumS);
-				int maximum = getValue(maximumS);
+				int minimum = getValue(minimumS,lineNumber);
+				int maximum = getValue(maximumS,lineNumber);
 
 				if (maximum < minimum) {
-					cout << "Spell failed: chaos limits are inverted" << endl;
+					cout << "Spell failed (Line " << (lineNumber + 1) << "): chaos limits are inverted" << endl;
+					spellFailed = true;
 					return;
 				}
 
@@ -211,11 +219,11 @@ void interpretLine(vector <string> program, int &lineNumber) {
 				return;
 			}
 
-			int firstValue = getValue(firstToken);
+			int firstValue = getValue(firstToken,lineNumber);
 
 			if (ss >> operation >> secondToken){
 
-				int secondValue = getValue(secondToken);
+				int secondValue = getValue(secondToken,lineNumber);
 
 				if (operation == "+") {
 					memory[varName] = firstValue + secondValue;
@@ -228,14 +236,15 @@ void interpretLine(vector <string> program, int &lineNumber) {
 				}
 				else if (operation == "/") {
 					if (secondValue == 0) {
-						cout << "Spell failed: division by zero" << endl;
+						cout << "Spell failed (Line " << (lineNumber + 1) << "): division by zero" << endl;
 						spellFailed = true;
 						return;
 					}
 					memory[varName] = firstValue / secondValue;
+					return;
 				}
 				else {
-					cout << "Spell failed: unknown operation" << endl;
+					cout << "Spell failed (Line " << (lineNumber + 1) << "): unknown operation" << endl;
 					spellFailed = true;
 					return;
 
@@ -246,12 +255,14 @@ void interpretLine(vector <string> program, int &lineNumber) {
 			}
 		}
 		else{
-			cout << "Spell failed: missing '=' sign" << endl;
+			cout << "Spell failed (Line " << (lineNumber + 1) << "): missing '=' sign" << endl;
+			spellFailed = true;
 			return;
 		}
 	}
 
 	else if (command == "banish") {
+		// banish x
 		string var;
 		bool banished = false;
 		ss >> var;
@@ -265,19 +276,22 @@ void interpretLine(vector <string> program, int &lineNumber) {
 			banished = true;
 		}
 		if(!banished) {
-			cout << "Spell failed: cannot banish the nonexistent" << endl;
+			cout << "Spell failed (Line " << (lineNumber + 1) << "): cannot banish the nonexistent" << endl;
+			spellFailed = true;
 			return;
 		}	
 	}
 
 	else if (command == "grimmoire") {
+		//grimmoire x 10(vector)
 		string vectorName;
 		string sizeS;
 		int size;
 		ss >> vectorName >> sizeS;
-		size = getValue(sizeS);
+		size = getValue(sizeS,lineNumber);
 		if (size <= 0) {
-			cout << "Spell failed: invalid size" << endl;
+			cout << "Spell failed (Line " << (lineNumber + 1) << "): invalid size" << endl;
+			spellFailed = true;
 			return;
 		}
 		grimmoires[vectorName] = vector<int>(size,0);
@@ -285,74 +299,87 @@ void interpretLine(vector <string> program, int &lineNumber) {
 	}
 
 	else if (command == "scribe") {
+		//scribe x 0 y
 		string vectorName;
 		string positionS;
 		string varString;
 		ss >> vectorName >> positionS >> varString;
-		int position = getValue(positionS);
-		int var = getValue(varString);
+		int position = getValue(positionS, lineNumber);
+		int var = getValue(varString,lineNumber);
 
 		if (grimmoires.find(vectorName) != grimmoires.end()) {
 			if (grimmoires[vectorName].size() > position && position >= 0) {
 				grimmoires[vectorName][position] = var;
 			}
 			else {
-				cout << "Spell failed: invalid position" << endl;
+				cout << "Spell failed (Line " << (lineNumber + 1) << "): invalid position" << endl;
 				spellFailed = true;
+				return;
 			}
 		}
 		else {
-			cout << "Spell failed: vector not found" << endl;
+			cout << "Spell failed (Line " << (lineNumber + 1) << "): vector not found" << endl;
 			spellFailed = true;
+			return;
 		}
 	}
 
 	else if (command == "extract") {
+		//extract x 0 y
 		string vectorName;
 		string positionS;
 		string varString;
 		ss >> vectorName >> positionS >> varString;
-		int position = getValue(positionS);
+		int position = getValue(positionS,lineNumber);
 		if (grimmoires.find(vectorName) != grimmoires.end()) {
 			if (grimmoires[vectorName].size() > position && position >= 0) {
 				if (memory.find(varString) != memory.end()) {
 					memory[varString] = grimmoires[vectorName][position];
 				}
 				else {
-					cout << "Spell failed: variable not found" << endl;
+					cout << "Spell failed (Line " << (lineNumber + 1) << "): variable not found" << endl;
 					spellFailed = true;
+					return;
 				}
 			}
 			else {
-				cout << "Spell failed: invalid position" << endl;
+				cout << "Spell failed (Line " << (lineNumber + 1) << "): invalid position" << endl;
 				spellFailed = true;
+				return;
 			}
 		}
 		else {
-			cout << "Spell failed: vector not found" << endl;
+			cout << "Spell failed (Line " << (lineNumber + 1) << "): vector not found" << endl;
 			spellFailed = true;
+			return;
 		}
 	}
 
 	else if (command == "infuse") {
+		//infuse x(++)
 		string target;
 		ss >> target;
 		if (memory.find(target) != memory.end()) {
 			memory[target]++;
 		}
 		else {
-			cout << "Spell failed: variable not found" << endl;
+			cout << "Spell failed (Line " << (lineNumber + 1) << "): variable not found" << endl;
+			spellFailed = true;
+			return;
 		}
 	}
 
 	else if (command == "drain") {
+		//drain x(--)
 		string target;
 		ss >> target;
 		if (memory.find(target) != memory.end()) {
 			memory[target]--;
 		}
 		else {
-			cout << "Spell failed: variable not found" << endl;
+			cout << "Spell failed (Line " << (lineNumber + 1) << "): variable not found" << endl;
+			spellFailed = true;
+			return;
 		}
 	}
 
@@ -372,56 +399,62 @@ void interpretLine(vector <string> program, int &lineNumber) {
 			found = true;
 		}
 		if (!found) {
-			cout << "Spell Failed: variable not found" << endl;
+			cout << "Spell Failed (Line " << (lineNumber + 1) << "): variable not found" << endl;
+			spellFailed = true;
 			return;
 		}
 
 		if (operation == "bound") {
 			valid = true;
-			if (getValue(firstVariable) == getValue(secondVariable)) {
+			if (getValue(firstVariable,lineNumber) == getValue(secondVariable,lineNumber)) {
 				correct = true;
 			}
 		}
 		else if (operation == "unbound") {
 			valid = true;
-			if (getValue(firstVariable) != getValue(secondVariable)) {
+			if (getValue(firstVariable,lineNumber) != getValue(secondVariable,lineNumber)) {
 				correct =  true;
 			}
 		}
 		else if (operation == "weaker") {
 			valid = true;
-			if (getValue(firstVariable) < getValue(secondVariable)) {
+			if (getValue(firstVariable,lineNumber) < getValue(secondVariable,lineNumber)) {
 				correct = true;
 			}
 		}
 		else if (operation == "weakerAs") {
 			valid = true;
-			if (getValue(firstVariable) <= getValue(secondVariable)) {
+			if (getValue(firstVariable, lineNumber) <= getValue(secondVariable,lineNumber)) {
 				correct = true;
 			}
 		}
 		else if (operation == "stronger") {
 			valid = true;
-			if (getValue(firstVariable) > getValue(secondVariable)) {
+			if (getValue(firstVariable, lineNumber) > getValue(secondVariable,lineNumber)) {
 				correct = true;
 			}
 		}
 		else if (operation == "strongerAs") {
 			valid = true;
-			if (getValue(firstVariable) >= getValue(secondVariable)) {
+			if (getValue(firstVariable,lineNumber) >= getValue(secondVariable,lineNumber)) {
 				correct = true;
 			}
 		}
 
 		if (!valid) {
-			cout << "Spell failed: invalid operator" << endl;
+			cout << "Spell failed (Line " << (lineNumber + 1) << "): invalid operator" << endl;
+			spellFailed = true;
 			return;
 		}
 
 		int finalLine;
 		int searchLine = lineNumber + 1;
 		finalLine = findEnd(program,searchLine);
-		if(finalLine == -1) return;
+		if (finalLine == -1) {
+			cout << "Spell failed (Line " << (lineNumber + 1) << "): prophecy block is never closed with 'end'" << endl;
+			spellFailed = true;
+			return;
+		}
 
 		if (correct) {
 			int innerLine = lineNumber + 1;
@@ -444,7 +477,7 @@ void interpretLine(vector <string> program, int &lineNumber) {
 		if (finalLine == -1) return;
 		int startLine = lineNumber + 1;
 
-		for (int i = 0;i < getValue(cycles); i++) {
+		for (int i = 0;i < getValue(cycles,lineNumber); i++) {
 			int innerLine = startLine;
 			while (innerLine < finalLine) {
 				interpretLine(program, innerLine);
@@ -471,8 +504,8 @@ void interpretLine(vector <string> program, int &lineNumber) {
 		while (true) {
 			bool valid = false;
 			bool correct = false;
-			int valueOne = getValue(firstValue);
-			int valueTwo = getValue(secondValue);
+			int valueOne = getValue(firstValue,lineNumber);
+			int valueTwo = getValue(secondValue,lineNumber);
 
 			if (operation == "bound") {
 				valid = true;
@@ -511,7 +544,8 @@ void interpretLine(vector <string> program, int &lineNumber) {
 				}
 			}
 			if (!valid) {
-				cout << "Spell failed: invalid operator" << endl;
+				cout << "Spell failed (Line " << (lineNumber + 1) << "): invalid operator" << endl;
+				spellFailed = true;
 				return;
 			}
 
@@ -554,6 +588,7 @@ void interpretLine(vector <string> program, int &lineNumber) {
 			innerLine++;
 		}
 		if (spellFailed && curseLine != -1) {
+			spellFailed = false;
 			int backupLine = curseLine + 1;
 			while (backupLine < endLine) {
 				interpretLine(program, backupLine);
@@ -561,6 +596,34 @@ void interpretLine(vector <string> program, int &lineNumber) {
 			}
 		}
 		lineNumber = endLine;
+	}
+
+	else if (command == "alchemy") {
+		bool error = false;
+		string firstVariable;
+		string secondVariable;
+		ss >> firstVariable >> secondVariable;
+
+		if (memory.find(firstVariable) == memory.end()) {
+			error = true;
+		}
+		if (memory.find(secondVariable) == memory.end()) {
+			error = true;
+		}
+		if (firstVariable == "" || secondVariable == "") {
+			error = true;
+		}
+		if (error) {
+			cout << "Spell failed (line " << lineNumber + 1 << " ): variable not found" << endl;
+			spellFailed = true;
+			return;
+		}
+
+		int firstVar = getValue(firstVariable, lineNumber);
+		int secondVar = getValue(secondVariable, lineNumber);
+		
+		memory[firstVariable] = secondVar;
+		memory[secondVariable] = firstVar;
 	}
 }
 
@@ -575,6 +638,10 @@ int main() {
 
 	while (lineNumber < programCode.size()){
 		interpretLine(programCode, lineNumber);
+		if (spellFailed) {
+			cout << "[CRITICAL ERROR] The ritual was violently broken!" << endl;
+			break;
+		}
 		lineNumber++;
 	}
 
