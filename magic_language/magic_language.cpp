@@ -11,6 +11,7 @@ const string FILENAME = "magic_language.txt";
 
 unordered_map<string, int> memory;
 unordered_map<string, vector<int>> grimmoires;
+bool spellFailed = false;
 
 void loadProgram(vector <string> &program) {
 	ifstream file(FILENAME);
@@ -30,6 +31,9 @@ void loadProgram(vector <string> &program) {
 }
 
 int getValue(const string& token) {
+	if (token.empty()) {
+		return 0;
+	}
 	if (isdigit(token[0]) || (token.size() > 1 && token[0] == '-')) {
 		return stoi(token);
 	}
@@ -63,7 +67,7 @@ int findEnd(vector <string> program, int &startLine) {
 		code = comment(line);
 		stringstream ss(code);
 		ss >> command;
-		if (command == "prophecy" || command == "echo" || command == "ritual") {
+		if (command == "prophecy" || command == "echo" || command == "ritual" || command == "ward") {
 			lineCheck++;
 		}
 		else if(command == "end"){
@@ -76,6 +80,34 @@ int findEnd(vector <string> program, int &startLine) {
 	}
 	cout << "Spell failed: missing 'end' keyword" << endl;
 	return lineCheck;
+}
+
+void findCurse(vector <string> program, int startLine, int& curseLine, int& endLine) {
+	curseLine = -1;
+	endLine = -1;
+
+	while (startLine < program.size()) {
+		stringstream ss(comment(program[startLine]));
+		string command;
+		ss >> command;
+
+		if (command == "prophecy" || command == "echo" || command == "ritual" || command == "ward") {
+			int nextLine = startLine + 1;
+			startLine = findEnd(program, nextLine);
+			if (startLine == -1) return;
+		}
+
+		else if (command == "curse") {
+			curseLine = startLine;
+		}
+		else if (command == "end") {
+			int finalSearch = startLine;
+			endLine = findEnd(program, finalSearch);
+			return;
+		}
+		startLine++;
+	}
+	cout << "Spell failed: missing 'end' keyword" << endl;
 }
 
 void interpretLine(vector <string> program, int &lineNumber) {
@@ -197,12 +229,14 @@ void interpretLine(vector <string> program, int &lineNumber) {
 				else if (operation == "/") {
 					if (secondValue == 0) {
 						cout << "Spell failed: division by zero" << endl;
+						spellFailed = true;
 						return;
 					}
 					memory[varName] = firstValue / secondValue;
 				}
 				else {
 					cout << "Spell failed: unknown operation" << endl;
+					spellFailed = true;
 					return;
 
 				}
@@ -263,11 +297,13 @@ void interpretLine(vector <string> program, int &lineNumber) {
 				grimmoires[vectorName][position] = var;
 			}
 			else {
-				cout << "Spell failed: invalidpoiìsition" << endl;
+				cout << "Spell failed: invalid position" << endl;
+				spellFailed = true;
 			}
 		}
 		else {
 			cout << "Spell failed: vector not found" << endl;
+			spellFailed = true;
 		}
 	}
 
@@ -283,15 +319,18 @@ void interpretLine(vector <string> program, int &lineNumber) {
 					memory[varString] = grimmoires[vectorName][position];
 				}
 				else {
-					cout << "Spell failde: variable not found" << endl;
+					cout << "Spell failed: variable not found" << endl;
+					spellFailed = true;
 				}
 			}
 			else {
 				cout << "Spell failed: invalid position" << endl;
+				spellFailed = true;
 			}
 		}
 		else {
 			cout << "Spell failed: vector not found" << endl;
+			spellFailed = true;
 		}
 	}
 
@@ -322,9 +361,21 @@ void interpretLine(vector <string> program, int &lineNumber) {
 		string firstVariable;
 		string secondVariable;
 		string operation;
+		bool found = false;
 		bool valid = false;
 		bool correct = false;
 		ss >> firstVariable >> operation >> secondVariable;
+		if (memory.find(firstVariable) != memory.end()) {
+			found = true;
+		}
+		if (memory.find(secondVariable) != memory.end()) {
+			found = true;
+		}
+		if (!found) {
+			cout << "Spell Failed: variable not found" << endl;
+			return;
+		}
+
 		if (operation == "bound") {
 			valid = true;
 			if (getValue(firstVariable) == getValue(secondVariable)) {
@@ -475,6 +526,41 @@ void interpretLine(vector <string> program, int &lineNumber) {
 			}
 		}
 		lineNumber = finalLine;
+	}
+
+	else if (command == "ward") {
+		int curseLine;
+		int endLine;
+		findCurse(program, lineNumber + 1, curseLine, endLine);
+		if (endLine == -1) {
+			return;
+		}
+		spellFailed = false;
+
+		int protectedEnd;
+		if (curseLine != -1) {
+			protectedEnd = curseLine;
+		}
+		else {
+			protectedEnd = endLine;
+		}
+
+		int innerLine = lineNumber + 1;
+		while (innerLine < protectedEnd) {
+			interpretLine(program, innerLine);
+			if (spellFailed) {
+				break;
+			}
+			innerLine++;
+		}
+		if (spellFailed && curseLine != -1) {
+			int backupLine = curseLine + 1;
+			while (backupLine < endLine) {
+				interpretLine(program, backupLine);
+				backupLine++;
+			}
+		}
+		lineNumber = endLine;
 	}
 }
 

@@ -1,14 +1,21 @@
-summon slot = 0
-summon current_item = 0
+summon health = 100
+summon mana = 50
 
-grimmoire bag 3
+ward
+    summon mana = mana - 10
+    reveal "Remaining mana after spell:" ! mana
+curse
+    reveal "ERROR: This curse message should NOT appear!"
+end
 
-scribe bag 0 99
-scribe bag 1 45
-scribe bag 2 7
+summon void = 0
 
-ritual slot weaker 3
-    extract bag slot current_item
-    reveal "Item at slot" ! slot ! "is: " ! current_item
-    infuse slot
+ward
+    reveal "Attempting to channel unstable chaotic energy..."
+    summon health = health / void
+    reveal "This text will be skipped because the spell breaks above."
+curse
+    reveal "CRITICAL: Spell failed! Emergency ward activated!"
+    summon health = 50
+    reveal "Health restored to safety level:" ! health
 end
