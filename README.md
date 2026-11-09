@@ -67,12 +67,12 @@ code that shows a echo(for) loop:
 
 ```text
 summon energy = 5
-reveal "start energy: " ! energia
+reveal "start energy: " ! energy
 
 reveal "starting the loop"
 echo 5
     reveal "energy remained: " ! energy
-    drain energia
+    drain energy
 end
 reveal "loop finished"
 ```
